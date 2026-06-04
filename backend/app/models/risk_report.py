@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from datetime import datetime
 
 from app.db.base import Base
@@ -22,4 +23,9 @@ class RiskReport(Base):
     project_id = Column(
         Integer,
         ForeignKey("projects.id")
+    )
+
+    project = relationship(
+        "Project",
+        back_populates="risk_reports"
     )

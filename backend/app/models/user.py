@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from datetime import datetime
 
 from app.db.base import Base
@@ -18,3 +19,8 @@ class User(Base):
     role = Column(String, default="developer")
 
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    projects = relationship(
+        "Project",
+        back_populates="owner"
+    )

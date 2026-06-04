@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from datetime import datetime
 
 from app.db.base import Base
@@ -24,4 +25,9 @@ class Issue(Base):
     sprint_id = Column(
         Integer,
         ForeignKey("sprints.id")
+    )
+
+    sprint = relationship(
+        "Sprint",
+        back_populates="issues"
     )
