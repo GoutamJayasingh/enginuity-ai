@@ -39,8 +39,3 @@ class Project(Base):
         "RiskReport",
         back_populates="project"
     )
-
-    project = relationship(
-        "Project",
-        back_populates="risk_reports"
-    )
