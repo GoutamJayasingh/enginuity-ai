@@ -39,3 +39,8 @@ class Project(Base):
         "RiskReport",
         back_populates="project"
     )
+
+    github_repository = relationship(
+        "GitHubRepository",
+        back_populates="project"
+    )
