@@ -1,4 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import (
+    APIRouter,
+    Header,
+    Depends
+)
 from sqlalchemy.orm import Session
 
 from app.db.dependencies import get_db
@@ -6,11 +10,19 @@ from app.schemas.user import UserCreate, UserLogin
 from app.models.user import User
 from app.core.security import (
     hash_password,
-    verify_password
+    verify_password,
+    create_access_token,
+    verify_access_token
+)
+
+from fastapi.security import (
+    HTTPBearer,
+    HTTPAuthorizationCredentials
 )
 
 router = APIRouter()
 
+security = HTTPBearer()
 
 @router.get("/health")
 def health_check():
@@ -63,6 +75,29 @@ def login(
             "message": "Invalid email or password"
         }
 
+    access_token = create_access_token(
+        data={
+            "sub": existing_user.email
+        }
+    )
+
     return {
-        "message": "Login successful"
+        "access_token": access_token,
+        "token_type": "bearer"
     }
+
+@router.get("/me")
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    print("SCHEME:", credentials.scheme)
+    print("TOKEN:", credentials.credentials)
+
+    token = credentials.credentials
+
+    email = verify_access_token(token)
+
+    if not email:
+        return {"message": "Invalid token"}
+
+    return {"email": email}
