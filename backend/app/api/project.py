@@ -11,25 +11,23 @@ from app.schemas.project import (
     ProjectUpdate
 )
 from app.models.project import Project
+from app.models.user import User
+from app.dependencies.current_user import get_current_user
 
 router = APIRouter()
 
 @router.post("/projects")
 def create_project(
     project: ProjectCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    new_project = Project(
-        name=project.name,
-        description=project.description
-    )
-
-    db.add(new_project)
-    db.commit()
-
     return {
-        "message": "Project created successfully"
-    }
+    "id": current_user.id,
+    "name": current_user.full_name,
+    "email": current_user.email,
+    "role": current_user.role
+}
 
 @router.get("/projects")
 def get_projects(
