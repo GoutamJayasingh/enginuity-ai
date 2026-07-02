@@ -22,18 +22,30 @@ def create_project(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    new_project = Project(
+    name=project.name,
+    description=project.description,
+    owner_id=current_user.id
+)
+
+    db.add(new_project)
+    db.commit()
+    db.refresh(new_project)
+
     return {
-    "id": current_user.id,
-    "name": current_user.full_name,
-    "email": current_user.email,
-    "role": current_user.role
-}
+        "message": "Project created successfully"
+    }
 
 @router.get("/projects")
 def get_projects(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    projects = db.query(Project).all()
+    projects = (
+        db.query(Project)
+        .filter(Project.owner_id == current_user.id)
+        .all()
+    )
 
     return projects
 
