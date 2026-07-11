@@ -71,11 +71,15 @@ def get_project(
 def update_project(
     project_id: int,
     updated_project: ProjectUpdate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     project = (
         db.query(Project)
-        .filter(Project.id == project_id)
+        .filter(
+            Project.id == project_id,
+            Project.owner_id == current_user.id
+        )
         .first()
     )
 
@@ -88,7 +92,6 @@ def update_project(
     project.description = updated_project.description
 
     db.commit()
-
     db.refresh(project)
 
     return project
@@ -96,11 +99,15 @@ def update_project(
 @router.delete("/projects/{project_id}")
 def delete_project(
     project_id: int,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     project = (
         db.query(Project)
-        .filter(Project.id == project_id)
+        .filter(
+            Project.id == project_id,
+            Project.owner_id == current_user.id
+        )
         .first()
     )
 
