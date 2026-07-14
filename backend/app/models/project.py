@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -19,6 +19,12 @@ class Project(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     owner_id = Column(Integer, ForeignKey("users.id"))
+
+    github_sync_enabled = Column(
+        Boolean,
+        default=False,
+        nullable=False
+    )
 
     owner = relationship(
         "User",
