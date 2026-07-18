@@ -48,5 +48,6 @@ class Project(Base):
 
     github_repository = relationship(
         "GitHubRepository",
-        back_populates="project"
+        back_populates="project",
+        uselist=False
     )

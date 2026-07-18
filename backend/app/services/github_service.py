@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 from github import Github
 
+from fastapi import HTTPException, status
+
 load_dotenv()
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -57,6 +59,7 @@ def get_user_repositories():
 
 from sqlalchemy.orm import Session
 
+from app.models.project import Project
 from app.models.github_repository import GitHubRepository
 
 
@@ -102,3 +105,49 @@ def sync_repositories(db: Session):
     db.commit()
 
     return synced
+
+def link_repository_to_project(
+    project_id: int,
+    repository_id: int,
+    db: Session
+):
+    project = (
+        db.query(Project)
+        .filter(Project.id == project_id)
+        .first()
+    )
+
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Project not found."
+        )
+
+    repository = (
+        db.query(GitHubRepository)
+        .filter(GitHubRepository.id == repository_id)
+        .first()
+    )
+
+    if not repository:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Repository not found."
+        )
+    
+    if (
+        repository.project_id is not None
+        and repository.project_id != project.id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Repository is already linked to another project."
+        )
+
+    repository.project_id = project.id
+
+    db.commit()
+
+    db.refresh(repository)
+
+    return repository
