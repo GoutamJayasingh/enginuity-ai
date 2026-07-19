@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.services.github_service import (
     sync_repositories,
-    link_repository_to_project
+    link_repository_to_project,
+    fetch_repository_commits
 )
 from app.api.auth import get_current_user
 from app.models.user import User
@@ -50,4 +51,24 @@ def link_repository(
             "name": repository.repo_name,
             "project_id": repository.project_id
         }
+    }
+
+@router.get(
+    "/repositories/{repository_id}/commits"
+)
+def get_commits(
+    repository_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    commits = fetch_repository_commits(
+        repository_id=repository_id,
+        db=db
+    )
+
+    return {
+        "message": "Commits synchronized successfully.",
+        "repository_id": repository_id,
+        "commits_added": len(commits),
+        "commit_shas": commits
     }

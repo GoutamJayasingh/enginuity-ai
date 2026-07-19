@@ -151,3 +151,79 @@ def link_repository_to_project(
     db.refresh(repository)
 
     return repository
+
+def get_repository_commits(
+    owner: str,
+    repository_name: str
+):
+    """
+    Fetch commit history for a GitHub repository.
+    """
+
+    repository = github.get_repo(
+        f"{owner}/{repository_name}"
+    )
+
+    commits = repository.get_commits()
+
+    return commits
+
+from app.models.commit import Commit
+
+def fetch_repository_commits(
+    repository_id: int,
+    db: Session
+):
+    """
+    Fetch commit history for a linked repository.
+    """
+
+    repository = (
+        db.query(GitHubRepository)
+        .filter(
+            GitHubRepository.id == repository_id
+        )
+        .first()
+    )
+
+    if not repository:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Repository not found."
+        )
+
+    commits = get_repository_commits(
+        owner=repository.owner_name,
+        repository_name=repository.repo_name
+    )
+
+    synced = []
+
+    for commit in commits:
+        existing_commit = (
+            db.query(Commit)
+            .filter(
+                Commit.sha == commit.sha
+            )
+            .first()
+        )
+
+        if existing_commit:
+            continue
+
+        new_commit = Commit(
+            sha=commit.sha,
+            message=commit.commit.message,
+            author_name=commit.commit.author.name,
+            author_email=commit.commit.author.email,
+            committed_at=commit.commit.author.date,
+            repository_id=repository.id
+        )
+
+        db.add(new_commit)
+
+        synced.append(commit.sha)
+
+    db.commit()
+
+    return synced

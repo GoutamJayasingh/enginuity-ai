@@ -48,3 +48,9 @@ class GitHubRepository(Base):
         "Project",
         back_populates="github_repository"
     )
+
+    commits = relationship(
+        "Commit",
+        back_populates="repository",
+        cascade="all, delete-orphan"
+    )
