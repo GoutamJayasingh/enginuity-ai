@@ -33,7 +33,8 @@ class Project(Base):
 
     sprints = relationship(
         "Sprint",
-        back_populates="project"
+        back_populates="project",
+        cascade="all, delete-orphan"
     )
 
     meeting_notes = relationship(

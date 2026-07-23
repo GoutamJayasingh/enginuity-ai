@@ -1,4 +1,11 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import (
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+)
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
@@ -14,15 +21,22 @@ class Sprint(Base):
 
     goal = Column(String)
 
-    start_date = Column(DateTime)
+    start_date = Column(
+       Date, 
+       nullable=False,
+    )
 
-    end_date = Column(DateTime)
+    end_date = Column(
+        Date,
+        nullable=False,
+    )
 
-    status = Column(String, default="planned")
+    status = Column(String, default="Planned")
 
     project_id = Column(
         Integer,
-        ForeignKey("projects.id")
+        ForeignKey("projects.id"),
+        nullable=False
     )
 
     project = relationship(
@@ -33,4 +47,9 @@ class Sprint(Base):
     issues = relationship(
         "Issue",
         back_populates="sprint"
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
     )
