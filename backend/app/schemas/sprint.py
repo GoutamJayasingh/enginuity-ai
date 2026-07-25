@@ -13,6 +13,13 @@ class SprintBase(BaseModel):
 class SprintCreate(SprintBase):
     pass
 
+class SprintUpdate(BaseModel):
+    name: Optional[str] = None
+    goal: Optional[str] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    status: Optional[str] = None
+
 class SprintResponse(SprintBase):
     id: int
     created_at: datetime

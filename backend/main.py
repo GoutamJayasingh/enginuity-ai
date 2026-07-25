@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+import app.db.base_imports
+
 from app.api.auth import router as auth_router
 
 from app.api.project import router as project_router
