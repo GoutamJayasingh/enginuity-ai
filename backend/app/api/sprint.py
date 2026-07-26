@@ -10,7 +10,10 @@ from app.models.user import User
 from app.schemas.sprint import (
     SprintCreate,
     SprintUpdate,
-    SprintResponse
+    SprintResponse,
+    SprintStatusUpdate,
+    SprintProgressResponse,
+    SprintSummaryResponse
 )
 
 from app.services.sprint_service import (
@@ -18,7 +21,10 @@ from app.services.sprint_service import (
     get_project_sprints,
     get_sprint_by_id,
     update_sprint,
-    delete_sprint
+    delete_sprint,
+    update_sprint_status,
+    get_sprint_progress,
+    get_sprint_summary
 )
 
 router = APIRouter(
@@ -98,3 +104,43 @@ def remove_sprint(
     )
 
 
+@router.patch("/{sprint_id}/status", response_model=SprintResponse)
+def update_sprint_status_endpoint(
+    sprint_id: int,
+    sprint_status: SprintStatusUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return update_sprint_status(
+        sprint_id,
+        sprint_status.status,
+        db
+    )
+
+@router.get(
+    "/{sprint_id}/progress",
+    response_model=SprintProgressResponse
+)
+def get_sprint_progress_endpoint(
+    sprint_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return get_sprint_progress(
+        sprint_id,
+        db
+    )
+
+@router.get(
+    "/{sprint_id}/summary",
+    response_model=SprintSummaryResponse
+)
+def get_sprint_summary_endpoint(
+    sprint_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return get_sprint_summary(
+        sprint_id,
+        db
+    )

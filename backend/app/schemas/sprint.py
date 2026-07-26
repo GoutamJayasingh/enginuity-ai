@@ -26,3 +26,21 @@ class SprintResponse(SprintBase):
     project_id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+class SprintStatusUpdate(BaseModel):
+    status: str
+
+class SprintProgressResponse(BaseModel):
+    sprint_id: int
+    total_issues: int
+    completed_issues: int
+    progress_percentage: float
+
+class SprintSummaryResponse(BaseModel):
+    sprint_id: int
+    name: str
+    goal: str
+    status: str
+    total_issues: int
+    completed_issues: int
+    progress_percentage: float

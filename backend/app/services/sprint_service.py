@@ -3,6 +3,7 @@ from fastapi import HTTPException
 
 from app.models.project import Project
 from app.models.sprint import Sprint
+from app.models.issue import Issue
 
 from app.schemas.sprint import (
     SprintCreate,
@@ -105,4 +106,82 @@ def delete_sprint(
 
     return {
         "message": "Sprint deleted successfully."
+    }
+
+def update_sprint_status(
+    sprint_id: int,
+    status: str,
+    db: Session
+):
+    sprint = get_sprint_by_id(
+        sprint_id,
+        db
+    )
+
+    sprint.status = status
+
+    db.commit()
+    db.refresh(sprint)
+
+    return sprint
+
+def get_sprint_progress(
+    sprint_id: int,
+    db: Session
+):
+    sprint = get_sprint_by_id(
+        sprint_id,
+        db
+    )
+
+    issues = (
+        db.query(Issue)
+        .filter(Issue.sprint_id == sprint_id)
+        .all()
+    )
+
+    total_issues = len(issues)
+
+    completed_issues = sum(
+        1 for issue in issues
+        if issue.status.lower() == "completed"
+    )
+
+    if total_issues == 0:
+        progress_percentage = 0.0
+    else:
+        progress_percentage = round(
+            (completed_issues / total_issues) * 100,
+            2
+        )
+
+    return {
+        "sprint_id": sprint.id,
+        "total_issues": total_issues,
+        "completed_issues": completed_issues,
+        "progress_percentage": progress_percentage
+    }
+
+def get_sprint_summary(
+    sprint_id: int,
+    db: Session
+):
+    sprint = get_sprint_by_id(
+        sprint_id,
+        db
+    )
+
+    progress = get_sprint_progress(
+        sprint_id,
+        db
+    )
+
+    return {
+        "sprint_id": sprint.id,
+        "name": sprint.name,
+        "goal": sprint.goal,
+        "status": sprint.status,
+        "total_issues": progress["total_issues"],
+        "completed_issues": progress["completed_issues"],
+        "progress_percentage": progress["progress_percentage"]
     }
