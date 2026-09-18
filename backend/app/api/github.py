@@ -8,7 +8,14 @@ from app.services.github_service import (
     fetch_repository_commits,
     get_stored_repository_commits,
     get_commit_by_id,
-    get_synced_repositories
+    get_synced_repositories,
+    get_commit_analytics,
+    get_contributor_analytics,
+    get_commit_activity,
+    get_github_analytics_summary,
+    sync_pull_requests,
+    get_pull_request_analytics,
+    get_branch_analytics
 )
 from app.api.auth import get_current_user
 from app.models.user import User
@@ -124,3 +131,114 @@ def list_synced_repositories(
         "total_repositories": len(repositories),
         "repositories": repositories
     }
+
+@router.get(
+    "/repositories/{repository_id}/commit-analytics"
+)
+def get_repository_commit_analytics(
+    repository_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    analytics = get_commit_analytics(
+        repository_id=repository_id,
+        db=db
+    )
+
+    return {
+        "message": "Commit analytics retrieved successfully.",
+        "analytics": analytics
+    }
+
+@router.get(
+    "/repositories/{repository_id}/contributor-analytics"
+)
+def get_repository_contributor_analytics(
+    repository_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    analytics = get_contributor_analytics(
+        repository_id=repository_id,
+        db=db
+    )
+
+    return {
+        "message": "Contributor analytics retrieved successfully.",
+        "analytics": analytics
+    }
+
+@router.get(
+    "/repositories/{repository_id}/commit-activity"
+)
+def get_repository_commit_activity(
+    repository_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    activity = get_commit_activity(
+        repository_id=repository_id,
+        db=db
+    )
+
+    return {
+        "message": "Commit activity retrieved successfully.",
+        "activity": activity
+    }
+
+@router.get(
+    "/repositories/{repository_id}/analytics"
+)
+def get_repository_analytics_summary(
+    repository_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    analytics = get_github_analytics_summary(
+        repository_id=repository_id,
+        db=db
+    )
+
+    return {
+        "message": "GitHub analytics summary retrieved successfully.",
+        "analytics": analytics
+    }
+
+@router.post(
+    "/repositories/{repository_id}/pull-requests/sync"
+)
+def sync_repository_pull_requests(
+    repository_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return sync_pull_requests(
+        repository_id=repository_id,
+        db=db
+    )
+
+@router.get(
+    "/repositories/{repository_id}/pull-request-analytics"
+)
+def get_repository_pull_request_analytics(
+    repository_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return get_pull_request_analytics(
+        repository_id=repository_id,
+        db=db
+    )
+
+@router.get(
+    "/repositories/{repository_id}/branch-analytics"
+)
+def get_repository_branch_analytics(
+    repository_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return get_branch_analytics(
+        repository_id=repository_id,
+        db=db
+    )

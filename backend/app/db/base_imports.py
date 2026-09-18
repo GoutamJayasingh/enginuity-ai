@@ -6,3 +6,4 @@ from app.models.commit import Commit
 from app.models.meeting_note import MeetingNote
 from app.models.risk_report import RiskReport
 from app.models.sprint import Sprint
+from app.models.pull_request import PullRequest
