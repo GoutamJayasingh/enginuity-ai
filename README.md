@@ -24,6 +24,7 @@ Enginuity AI helps software teams:
 - RAG Knowledge Base
 - Multi-Agent System
 - Risk Prediction Engine
+- MCP
 
 ## Tech Stack
 
