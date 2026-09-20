@@ -10,6 +10,8 @@ from app.api.sprint import router as sprint_router
 
 from app.api.issue import router as issue_router
 
+from app.api.meeting import router as meeting_router
+
 from app.api import github
 
 app = FastAPI()
@@ -23,3 +25,5 @@ app.include_router(github.router)
 app.include_router(sprint_router)
 
 app.include_router(issue_router)
+
+app.include_router(meeting_router)
