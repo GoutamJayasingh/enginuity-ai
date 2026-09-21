@@ -27,3 +27,9 @@ class MeetingNote(Base):
         "Project",
         back_populates="meeting_notes"
     )
+
+    decisions = relationship(
+        "MeetingDecision",
+        back_populates="meeting_note",
+        cascade="all, delete-orphan"
+    )
