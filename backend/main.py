@@ -14,6 +14,10 @@ from app.api.meeting import router as meeting_router
 
 from app.api.meeting_decision import router as meeting_decision_router
 
+from app.api.meeting_action_item import router as meeting_action_item_router
+
+from app.api.meeting_blocker import router as meeting_blocker_router
+
 from app.api import github
 
 app = FastAPI()
@@ -31,3 +35,7 @@ app.include_router(issue_router)
 app.include_router(meeting_router)
 
 app.include_router(meeting_decision_router)
+
+app.include_router(meeting_action_item_router)
+
+app.include_router(meeting_blocker_router)

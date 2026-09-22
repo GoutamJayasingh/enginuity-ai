@@ -33,3 +33,15 @@ class MeetingNote(Base):
         back_populates="meeting_note",
         cascade="all, delete-orphan"
     )
+
+    action_items = relationship(
+        "MeetingActionItem",
+        back_populates="meeting_note",
+        cascade="all, delete-orphan"
+    )
+
+    blockers = relationship(
+        "MeetingBlocker",
+        back_populates="meeting_note",
+        cascade="all, delete-orphan"
+    )

@@ -8,3 +8,5 @@ from app.models.risk_report import RiskReport
 from app.models.sprint import Sprint
 from app.models.pull_request import PullRequest
 from app.models.meeting_decision import MeetingDecision
+from app.models.meeting_action_item import MeetingActionItem
+from app.models.meeting_blocker import MeetingBlocker
