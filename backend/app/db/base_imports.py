@@ -10,3 +10,4 @@ from app.models.pull_request import PullRequest
 from app.models.meeting_decision import MeetingDecision
 from app.models.meeting_action_item import MeetingActionItem
 from app.models.meeting_blocker import MeetingBlocker
+from app.models.meeting_risk import MeetingRisk

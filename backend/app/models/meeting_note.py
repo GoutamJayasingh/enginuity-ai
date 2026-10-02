@@ -45,3 +45,9 @@ class MeetingNote(Base):
         back_populates="meeting_note",
         cascade="all, delete-orphan"
     )
+
+    risks = relationship(
+        "MeetingRisk",
+        back_populates="meeting_note",
+        cascade="all, delete-orphan"
+    )
