@@ -22,6 +22,8 @@ from app.api.meeting_risk import router as meeting_risk_router
 
 from app.api.meeting_intelligence import router as meeting_intelligence_router
 
+from app.api.meeting_analysis import router as meeting_analysis_router
+
 from app.api import github
 
 app = FastAPI()
@@ -47,3 +49,5 @@ app.include_router(meeting_blocker_router)
 app.include_router(meeting_risk_router)
 
 app.include_router(meeting_intelligence_router)
+
+app.include_router(meeting_analysis_router)
