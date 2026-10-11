@@ -9,18 +9,23 @@ def create_meeting_action_item(
     assignee: str | None,
     due_date,
     meeting_note_id: int,
-    db: Session
+    db: Session,
+    commit: bool = True,
 ):
     meeting_action_item = MeetingActionItem(
         action_item=action_item,
         assignee=assignee,
         due_date=due_date,
-        meeting_note_id=meeting_note_id
+        meeting_note_id=meeting_note_id,
     )
 
     db.add(meeting_action_item)
-    db.commit()
-    db.refresh(meeting_action_item)
+
+    if commit:
+        db.commit()
+        db.refresh(meeting_action_item)
+    else:
+        db.flush()
 
     return meeting_action_item
 

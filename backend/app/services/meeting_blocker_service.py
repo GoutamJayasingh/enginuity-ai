@@ -8,19 +8,22 @@ def create_meeting_blocker(
     blocker: str,
     severity: str | None,
     meeting_note_id: int,
-    db: Session
+    db: Session,
+    commit: bool = True,
 ):
     meeting_blocker = MeetingBlocker(
         blocker=blocker,
         severity=severity,
-        meeting_note_id=meeting_note_id
+        meeting_note_id=meeting_note_id,
     )
 
     db.add(meeting_blocker)
-    db.commit()
-    db.refresh(meeting_blocker)
 
-    return meeting_blocker
+    if commit:
+        db.commit()
+        db.refresh(meeting_blocker)
+    else:
+        db.flush()
 
 
 def get_meeting_blockers(

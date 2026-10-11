@@ -8,17 +8,22 @@ def create_meeting_risk(
     risk: str,
     severity: str | None,
     meeting_note_id: int,
-    db: Session
+    db: Session,
+    commit: bool = True,
 ):
     meeting_risk = MeetingRisk(
         risk=risk,
         severity=severity,
-        meeting_note_id=meeting_note_id
+        meeting_note_id=meeting_note_id,
     )
 
     db.add(meeting_risk)
-    db.commit()
-    db.refresh(meeting_risk)
+
+    if commit:
+        db.commit()
+        db.refresh(meeting_risk)
+    else:
+        db.flush()
 
     return meeting_risk
 

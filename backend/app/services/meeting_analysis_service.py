@@ -24,46 +24,91 @@ from app.services.meeting_risk_service import (
     create_meeting_risk,
 )
 
+from fastapi import HTTPException, status
+from groq import APIConnectionError, APIStatusError, RateLimitError
+from pydantic import ValidationError
+
 def analyze_meeting_content(
     meeting_content: str,
 ) -> MeetingAnalysisResult:
     if not meeting_content or not meeting_content.strip():
-        raise ValueError("Meeting content cannot be empty.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Meeting content cannot be empty.",
+        )
 
-    client = get_groq_client()
+    try:
+        client = get_groq_client()
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="LLM configuration is unavailable.",
+        ) from exc
 
     prompt = build_meeting_analysis_prompt(meeting_content)
 
-    response = client.chat.completions.create(
-        model=os.getenv(
-            "GROQ_MODEL",
-            "llama-3.3-70b-versatile",
-        ),
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You analyze engineering meeting notes and "
-                    "return structured information as valid JSON."
-                ),
-            },
-            {
-                "role": "user",
-                "content": prompt,
-            },
-        ],
-        temperature=0.1,
-        response_format={"type": "json_object"},
-    )
+    try:
+        response = client.chat.completions.create(
+            model=os.getenv(
+                "GROQ_MODEL",
+                "openai/gpt-oss-20b",
+            ),
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You analyze engineering meeting notes and "
+                        "return structured information as valid JSON."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ],
+            temperature=0.1,
+            response_format={"type": "json_object"},
+        )
+
+    except RateLimitError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="The LLM rate limit was reached. Try again later.",
+        ) from exc
+
+    except APIConnectionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unable to connect to the LLM provider.",
+        ) from exc
+
+    except APIStatusError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=(
+                "The LLM provider rejected or could not process "
+                "the analysis request. Check the model configuration "
+                "and provider availability."
+            ),
+        ) from exc
 
     response_content = response.choices[0].message.content
 
     if not response_content:
-        raise ValueError("The LLM returned an empty response.")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="The LLM returned an empty response.",
+        )
 
-    result = MeetingAnalysisResult.model_validate_json(
-        response_content
-    )
+    try:
+        result = MeetingAnalysisResult.model_validate_json(
+            response_content
+        )
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="The LLM returned an invalid analysis structure.",
+        ) from exc
 
     return validate_meeting_analysis(result)
 
@@ -125,6 +170,7 @@ def persist_meeting_decisions(
             decision=item.decision,
             meeting_note_id=meeting_note_id,
             db=db,
+            commit=False,
         )
 
         saved_decisions.append(saved_decision)
@@ -145,6 +191,7 @@ def persist_meeting_action_items(
             due_date=item.due_date,
             meeting_note_id=meeting_note_id,
             db=db,
+            commit=False,
         )
 
         saved_action_items.append(saved_action_item)
@@ -164,6 +211,7 @@ def persist_meeting_blockers(
             severity=item.severity,
             meeting_note_id=meeting_note_id,
             db=db,
+            commit=False,
         )
 
         saved_blockers.append(saved_blocker)
@@ -183,8 +231,10 @@ def persist_meeting_risks(
             severity=item.severity,
             meeting_note_id=meeting_note_id,
             db=db,
+            commit=False,
         )
 
         saved_risks.append(saved_risk)
 
     return saved_risks
+

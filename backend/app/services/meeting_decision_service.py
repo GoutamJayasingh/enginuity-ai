@@ -6,16 +6,21 @@ from app.models.meeting_decision import MeetingDecision
 def create_meeting_decision(
     decision: str,
     meeting_note_id: int,
-    db: Session
+    db: Session,
+    commit: bool = True,
 ):
     meeting_decision = MeetingDecision(
         decision=decision,
-        meeting_note_id=meeting_note_id
+        meeting_note_id=meeting_note_id,
     )
 
     db.add(meeting_decision)
-    db.commit()
-    db.refresh(meeting_decision)
+
+    if commit:
+        db.commit()
+        db.refresh(meeting_decision)
+    else:
+        db.flush()
 
     return meeting_decision
 
