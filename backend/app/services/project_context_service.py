@@ -7,6 +7,12 @@ from app.models.commit import Commit
 from app.models.pull_request import PullRequest
 from app.models.project import Project
 
+from app.models.meeting_note import MeetingNote
+from app.models.meeting_decision import MeetingDecision
+from app.models.meeting_action_item import MeetingActionItem
+from app.models.meeting_blocker import MeetingBlocker
+from app.models.meeting_risk import MeetingRisk
+
 
 def get_project_github_context(
     project_id: int,
@@ -85,6 +91,98 @@ def get_project_github_context(
             ],
         })
 
+        
+    meeting_notes = (
+        db.query(MeetingNote)
+        .filter(MeetingNote.project_id == project_id)
+        .order_by(MeetingNote.created_at.desc())
+        .all()
+    )
+
+    meeting_context = []
+
+    for meeting_note in meeting_notes:
+        decisions = (
+            db.query(MeetingDecision)
+            .filter(
+                MeetingDecision.meeting_note_id == meeting_note.id
+            )
+            .order_by(MeetingDecision.created_at.desc())
+            .all()
+        )
+
+        action_items = (
+            db.query(MeetingActionItem)
+            .filter(
+                MeetingActionItem.meeting_note_id == meeting_note.id
+            )
+            .order_by(MeetingActionItem.created_at.desc())
+            .all()
+        )
+
+        blockers = (
+            db.query(MeetingBlocker)
+            .filter(
+                MeetingBlocker.meeting_note_id == meeting_note.id
+            )
+            .order_by(MeetingBlocker.created_at.desc())
+            .all()
+        )
+
+        risks = (
+            db.query(MeetingRisk)
+            .filter(
+                MeetingRisk.meeting_note_id == meeting_note.id
+            )
+            .order_by(MeetingRisk.created_at.desc())
+            .all()
+        )
+
+        meeting_context.append({
+            "meeting_note": {
+                "id": meeting_note.id,
+                "title": meeting_note.title,
+                "summary": meeting_note.summary,
+                "created_at": meeting_note.created_at,
+            },
+            "decisions": [
+                {
+                    "id": decision.id,
+                    "decision": decision.decision,
+                }
+                for decision in decisions
+            ],
+            "action_items": [
+                {
+                    "id": item.id,
+                    "action_item": item.action_item,
+                    "assignee": item.assignee,
+                    "due_date": item.due_date,
+                    "status": item.status,
+                }
+                for item in action_items
+            ],
+            "blockers": [
+                {
+                    "id": blocker.id,
+                    "blocker": blocker.blocker,
+                    "severity": blocker.severity,
+                    "status": blocker.status,
+                }
+                for blocker in blockers
+            ],
+            "risks": [
+                {
+                    "id": risk.id,
+                    "risk": risk.risk,
+                    "severity": risk.severity,
+                    "status": risk.status,
+                }
+                for risk in risks
+            ],
+        })
+
+
     return {
         "project_id": project.id,
         "repositories": repository_context,
@@ -97,4 +195,6 @@ def get_project_github_context(
             len(item["pull_requests"])
             for item in repository_context
         ),
+        "meetings": meeting_context,
+        "meeting_count": len(meeting_context),
     }

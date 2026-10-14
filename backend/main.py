@@ -26,11 +26,21 @@ from app.api.meeting_analysis import router as meeting_analysis_router
 
 from app.api import github
 
+from app.api.project_context import router as project_context_router
+
+from app.api.engineering_summary import (
+    router as engineering_summary_router
+)
+
 app = FastAPI()
 
 app.include_router(auth_router)
 
 app.include_router(project_router)
+
+app.include_router(project_context_router)
+
+app.include_router(engineering_summary_router)
 
 app.include_router(github.router)
 
