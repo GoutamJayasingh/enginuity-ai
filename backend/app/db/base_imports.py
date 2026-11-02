@@ -11,3 +11,4 @@ from app.models.meeting_decision import MeetingDecision
 from app.models.meeting_action_item import MeetingActionItem
 from app.models.meeting_blocker import MeetingBlocker
 from app.models.meeting_risk import MeetingRisk
+from app.models.engineering_insight import EngineeringInsight

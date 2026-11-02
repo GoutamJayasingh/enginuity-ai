@@ -47,6 +47,12 @@ class Project(Base):
         back_populates="project"
     )
 
+    engineering_insights = relationship(
+        "EngineeringInsight",
+        back_populates="project",
+        cascade="all, delete-orphan"
+    )
+
     github_repository = relationship(
         "GitHubRepository",
         back_populates="project",

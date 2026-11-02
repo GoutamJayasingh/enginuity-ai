@@ -13,6 +13,11 @@ from app.services.engineering_insights_prompt import (
     build_engineering_insights_prompt,
 )
 
+from datetime import datetime
+from sqlalchemy.orm import Session
+
+from app.models.engineering_insight import EngineeringInsight
+
 
 def generate_engineering_insights(
     project_id: int,
@@ -103,3 +108,32 @@ def generate_engineering_insights(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="AI provider returned an invalid engineering insights response.",
         )
+
+def persist_engineering_insights(
+    project_id: int,
+    insights: EngineeringInsightsResult,
+    db: Session,
+) -> EngineeringInsight:
+
+    engineering_insight = EngineeringInsight(
+        project_id=project_id,
+        insights=insights.model_dump(),
+        model_name=os.getenv(
+            "GROQ_MODEL",
+            "openai/gpt-oss-20b",
+        ),
+        prompt_version="v1",
+        generated_at=datetime.utcnow(),
+    )
+
+    db.add(engineering_insight)
+
+    try:
+        db.commit()
+        db.refresh(engineering_insight)
+
+    except Exception:
+        db.rollback()
+        raise
+
+    return engineering_insight

@@ -32,6 +32,10 @@ from app.api.engineering_summary import (
     router as engineering_summary_router
 )
 
+from app.api.engineering_insights import (
+    router as engineering_insights_router
+)
+
 app = FastAPI()
 
 app.include_router(auth_router)
@@ -41,6 +45,8 @@ app.include_router(project_router)
 app.include_router(project_context_router)
 
 app.include_router(engineering_summary_router)
+
+app.include_router(engineering_insights_router)
 
 app.include_router(github.router)
 
