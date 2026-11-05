@@ -42,16 +42,18 @@ async def main():
 
         result = await execute_mcp_tool(
             session=session,
-            tool_name="get_all_projects",
+            tool_name="get_project_github_repositories",
             arguments={
+                "project_id": 1,
                 "owner_id": 1,
             },
         )
 
-        print("\nTOOL EXECUTION RESULT")
-        print("=====================")
+        print("\nGITHUB REPOSITORIES RESULT")
+        print("==========================")
 
-        print(result.content[0].text)
+        if result.content:
+            print(result.content[0].text)
 
 
 if __name__ == "__main__":
