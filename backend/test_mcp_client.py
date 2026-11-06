@@ -42,15 +42,15 @@ async def main():
 
         result = await execute_mcp_tool(
             session=session,
-            tool_name="get_project_github_repositories",
+            tool_name="get_jira_sprints_mcp",
             arguments={
-                "project_id": 1,
-                "owner_id": 1,
+                "board_id": 1,
+                "max_results": 50,
             },
         )
 
-        print("\nGITHUB REPOSITORIES RESULT")
-        print("==========================")
+        print("\nJIRA SPRINTS MCP RESULT")
+        print("=======================")
 
         if result.content:
             print(result.content[0].text)

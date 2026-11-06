@@ -9,6 +9,15 @@ from app.models.meeting_action_item import MeetingActionItem
 from app.models.meeting_blocker import MeetingBlocker
 from app.models.meeting_risk import MeetingRisk
 from app.models.github_repository import GitHubRepository
+from app.models.commit import Commit
+from app.services.github_service import get_stored_repository_commits
+from app.services.github_service import get_github_analytics_summary
+from app.services.github_service import get_pull_request_analytics
+from app.services.jira_service import (
+    get_jira_projects,
+    get_jira_issues,
+    get_jira_sprints,
+)
 
 import app.db.base_imports
 
@@ -533,6 +542,264 @@ def get_project_github_repositories(
     finally:
         db.close()
 
+@server.tool()
+def get_github_commits(
+    project_id: int,
+    repository_id: int,
+    owner_id: int,
+) -> dict:
+    """Retrieve stored GitHub commits for a project's repository."""
+
+    db = SessionLocal()
+
+    try:
+        project = (
+            db.query(Project)
+            .filter(
+                Project.id == project_id,
+                Project.owner_id == owner_id,
+            )
+            .first()
+        )
+
+        if not project:
+            return {
+                "success": False,
+                "message": "Project not found.",
+            }
+
+        repository = (
+            db.query(GitHubRepository)
+            .filter(
+                GitHubRepository.id == repository_id,
+                GitHubRepository.project_id == project_id,
+            )
+            .first()
+        )
+
+        if not repository:
+            return {
+                "success": False,
+                "message": "Repository not found for this project.",
+            }
+
+        commits = get_stored_repository_commits(
+            repository_id=repository_id,
+            db=db,
+        )
+
+        return {
+            "success": True,
+            "project_id": project_id,
+            "repository_id": repository_id,
+            "repository_name": repository.full_name,
+            "total_commits": len(commits),
+            "commits": [
+                {
+                    **commit,
+                    "committed_at": (
+                        commit["committed_at"].isoformat()
+                        if commit["committed_at"]
+                        else None
+                    ),
+                }
+                for commit in commits
+            ],
+        }
+
+    finally:
+        db.close()
+
+@server.tool()
+def get_github_analytics(
+    project_id: int,
+    repository_id: int,
+    owner_id: int,
+) -> dict:
+    """Retrieve consolidated GitHub analytics for a project's repository."""
+
+    db = SessionLocal()
+
+    try:
+        project = (
+            db.query(Project)
+            .filter(
+                Project.id == project_id,
+                Project.owner_id == owner_id,
+            )
+            .first()
+        )
+
+        if not project:
+            return {
+                "success": False,
+                "message": "Project not found.",
+            }
+
+        repository = (
+            db.query(GitHubRepository)
+            .filter(
+                GitHubRepository.id == repository_id,
+                GitHubRepository.project_id == project_id,
+            )
+            .first()
+        )
+
+        if not repository:
+            return {
+                "success": False,
+                "message": "Repository not found for this project.",
+            }
+
+        analytics = get_github_analytics_summary(
+            repository_id=repository_id,
+            db=db,
+        )
+
+        for commit in analytics["commits"]["recent_commits"]:
+            if commit["committed_at"]:
+                commit["committed_at"] = (
+                    commit["committed_at"].isoformat()
+                )
+
+        return {
+            "success": True,
+            "project_id": project_id,
+            "repository_id": repository_id,
+            "analytics": analytics,
+        }
+
+    finally:
+        db.close()
+
+@server.tool()
+def get_github_pull_request_analytics(
+    project_id: int,
+    repository_id: int,
+    owner_id: int,
+) -> dict:
+    """Retrieve pull request analytics for a project's GitHub repository."""
+
+    db = SessionLocal()
+
+    try:
+        project = (
+            db.query(Project)
+            .filter(
+                Project.id == project_id,
+                Project.owner_id == owner_id,
+            )
+            .first()
+        )
+
+        if not project:
+            return {
+                "success": False,
+                "message": "Project not found.",
+            }
+
+        repository = (
+            db.query(GitHubRepository)
+            .filter(
+                GitHubRepository.id == repository_id,
+                GitHubRepository.project_id == project_id,
+            )
+            .first()
+        )
+
+        if not repository:
+            return {
+                "success": False,
+                "message": "Repository not found for this project.",
+            }
+
+        analytics = get_pull_request_analytics(
+            repository_id=repository_id,
+            db=db,
+        )
+
+        return {
+            "success": True,
+            "project_id": project_id,
+            "repository_id": repository_id,
+            "pull_request_analytics": analytics,
+        }
+
+    finally:
+        db.close()
+
+@server.tool()
+def get_jira_projects_mcp() -> dict:
+    """Retrieve Jira projects accessible to the configured account."""
+
+    try:
+        result = get_jira_projects()
+
+        return {
+            "success": True,
+            "total_projects": result["total"],
+            "projects": result["projects"],
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "message": str(error),
+        }
+
+@server.tool()
+def get_jira_issues_mcp(
+    project_key: str,
+    max_results: int = 50,
+) -> dict:
+    """Retrieve engineering issues from a Jira project."""
+
+    try:
+        result = get_jira_issues(
+            project_key=project_key,
+            max_results=max_results,
+        )
+
+        return {
+            "success": True,
+            "project_key": result["project_key"],
+            "total_issues": result["total"],
+            "issues": result["issues"],
+            "is_last": result["is_last"],
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "message": str(error),
+        }
+
+@server.tool()
+def get_jira_sprints_mcp(
+    board_id: int,
+    max_results: int = 50,
+) -> dict:
+    """Retrieve sprints from a Jira Scrum board."""
+
+    try:
+        result = get_jira_sprints(
+            board_id=board_id,
+            max_results=max_results,
+        )
+
+        return {
+            "success": True,
+            "board_id": result["board_id"],
+            "total_sprints": result["total"],
+            "sprints": result["sprints"],
+            "is_last": result["is_last"],
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "message": str(error),
+        }
 
 if __name__ == "__main__":
     server.run(transport="stdio")
