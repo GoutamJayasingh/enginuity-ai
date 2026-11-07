@@ -42,15 +42,15 @@ async def main():
 
         result = await execute_mcp_tool(
             session=session,
-            tool_name="get_jira_sprints_mcp",
+            tool_name="get_jira_sprint_issues_mcp",
             arguments={
-                "board_id": 1,
+                "sprint_id": 2,
                 "max_results": 50,
             },
         )
 
-        print("\nJIRA SPRINTS MCP RESULT")
-        print("=======================")
+        print("\nJIRA SPRINT ISSUES MCP RESULT")
+        print("=============================")
 
         if result.content:
             print(result.content[0].text)

@@ -198,3 +198,74 @@ def get_jira_sprints(
         "sprints": sprints,
         "is_last": data.get("isLast"),
     }
+
+def get_jira_sprint_issues(
+    sprint_id: int,
+    max_results: int = 50,
+):
+    base_url = os.getenv("JIRA_BASE_URL")
+    email = os.getenv("JIRA_EMAIL")
+    api_token = os.getenv("JIRA_API_TOKEN")
+
+    if not all([base_url, email, api_token]):
+        raise ValueError(
+            "Jira credentials are not configured."
+        )
+
+    response = requests.get(
+        f"{base_url}/rest/agile/1.0/sprint/{sprint_id}/issue",
+        auth=(email, api_token),
+        headers={
+            "Accept": "application/json"
+        },
+        params={
+            "startAt": 0,
+            "maxResults": max_results,
+        },
+        timeout=15,
+    )
+
+    response.raise_for_status()
+
+    data = response.json()
+
+    issues = []
+
+    for issue in data.get("issues", []):
+        fields = issue.get("fields", {})
+
+        issue_type = fields.get("issuetype")
+        status = fields.get("status")
+        assignee = fields.get("assignee")
+        priority = fields.get("priority")
+
+        issues.append({
+            "id": issue.get("id"),
+            "key": issue.get("key"),
+            "summary": fields.get("summary"),
+            "issue_type": (
+                issue_type.get("name")
+                if issue_type else None
+            ),
+            "status": (
+                status.get("name")
+                if status else None
+            ),
+            "assignee": (
+                assignee.get("displayName")
+                if assignee else None
+            ),
+            "priority": (
+                priority.get("name")
+                if priority else None
+            ),
+            "created": fields.get("created"),
+            "due_date": fields.get("duedate"),
+        })
+
+    return {
+        "sprint_id": sprint_id,
+        "total": data.get("total", 0),
+        "issues": issues,
+        "is_last": data.get("isLast"),
+    }

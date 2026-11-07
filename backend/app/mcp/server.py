@@ -17,6 +17,7 @@ from app.services.jira_service import (
     get_jira_projects,
     get_jira_issues,
     get_jira_sprints,
+    get_jira_sprint_issues,
 )
 
 import app.db.base_imports
@@ -792,6 +793,33 @@ def get_jira_sprints_mcp(
             "board_id": result["board_id"],
             "total_sprints": result["total"],
             "sprints": result["sprints"],
+            "is_last": result["is_last"],
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "message": str(error),
+        }
+
+@server.tool()
+def get_jira_sprint_issues_mcp(
+    sprint_id: int,
+    max_results: int = 50,
+) -> dict:
+    """Retrieve issues assigned to a Jira sprint."""
+
+    try:
+        result = get_jira_sprint_issues(
+            sprint_id=sprint_id,
+            max_results=max_results,
+        )
+
+        return {
+            "success": True,
+            "sprint_id": result["sprint_id"],
+            "total_issues": result["total"],
+            "issues": result["issues"],
             "is_last": result["is_last"],
         }
 
