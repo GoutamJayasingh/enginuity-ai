@@ -42,15 +42,15 @@ async def main():
 
         result = await execute_mcp_tool(
             session=session,
-            tool_name="get_jira_sprint_issues_mcp",
+            tool_name="check_google_calendar_availability",
             arguments={
-                "sprint_id": 2,
-                "max_results": 50,
+                "time_min": "2026-11-10T09:00:00+05:30",
+                "time_max": "2026-11-10T18:00:00+05:30",
             },
         )
 
-        print("\nJIRA SPRINT ISSUES MCP RESULT")
-        print("=============================")
+        print("\nGOOGLE CALENDAR AVAILABILITY MCP RESULT")
+        print("=======================================")
 
         if result.content:
             print(result.content[0].text)

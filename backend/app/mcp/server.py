@@ -19,6 +19,10 @@ from app.services.jira_service import (
     get_jira_sprints,
     get_jira_sprint_issues,
 )
+from app.services.google_calendar_service import (
+    get_upcoming_events,
+    check_calendar_availability,
+)
 
 import app.db.base_imports
 
@@ -821,6 +825,57 @@ def get_jira_sprint_issues_mcp(
             "total_issues": result["total"],
             "issues": result["issues"],
             "is_last": result["is_last"],
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "message": str(error),
+        }
+
+@server.tool()
+def get_upcoming_calendar_events(
+    max_results: int = 10,
+) -> dict:
+    """Retrieve upcoming events from Google Calendar."""
+
+    try:
+        result = get_upcoming_events(
+            max_results=max_results,
+        )
+
+        return {
+            "success": True,
+            "total_events": result["total"],
+            "events": result["events"],
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "message": str(error),
+        }
+
+@server.tool()
+def check_google_calendar_availability(
+    time_min: str,
+    time_max: str,
+) -> dict:
+    """Check Google Calendar availability for a time range."""
+
+    try:
+        result = check_calendar_availability(
+            time_min=time_min,
+            time_max=time_max,
+        )
+
+        return {
+            "success": True,
+            "calendar_id": result["calendar_id"],
+            "time_min": result["time_min"],
+            "time_max": result["time_max"],
+            "is_available": result["is_available"],
+            "busy_periods": result["busy_periods"],
         }
 
     except Exception as error:
