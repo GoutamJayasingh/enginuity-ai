@@ -22,6 +22,9 @@ from app.services.jira_service import (
 from app.services.google_calendar_service import (
     get_upcoming_events,
     check_calendar_availability,
+    create_calendar_event,
+    delete_calendar_event,
+    update_calendar_event
 )
 
 import app.db.base_imports
@@ -833,6 +836,7 @@ def get_jira_sprint_issues_mcp(
             "message": str(error),
         }
 
+
 @server.tool()
 def get_upcoming_calendar_events(
     max_results: int = 10,
@@ -840,15 +844,9 @@ def get_upcoming_calendar_events(
     """Retrieve upcoming events from Google Calendar."""
 
     try:
-        result = get_upcoming_events(
+        return get_upcoming_events(
             max_results=max_results,
         )
-
-        return {
-            "success": True,
-            "total_events": result["total"],
-            "events": result["events"],
-        }
 
     except Exception as error:
         return {
@@ -864,19 +862,81 @@ def check_google_calendar_availability(
     """Check Google Calendar availability for a time range."""
 
     try:
-        result = check_calendar_availability(
+        return check_calendar_availability(
             time_min=time_min,
             time_max=time_max,
         )
 
+    except Exception as error:
         return {
-            "success": True,
-            "calendar_id": result["calendar_id"],
-            "time_min": result["time_min"],
-            "time_max": result["time_max"],
-            "is_available": result["is_available"],
-            "busy_periods": result["busy_periods"],
+            "success": False,
+            "message": str(error),
         }
+
+@server.tool()
+def create_google_calendar_event(
+    summary: str,
+    start_time: str,
+    end_time: str,
+    description: str = "",
+    location: str = "",
+) -> dict:
+    """Create a meeting in Google Calendar."""
+
+    try:
+        return create_calendar_event(
+            summary=summary,
+            start_time=start_time,
+            end_time=end_time,
+            description=description or None,
+            location=location or None,
+        )
+
+    except Exception as error:
+        return {
+            "success": False,
+            "message": str(error),
+        }
+
+
+
+@server.tool()
+def delete_google_calendar_event(
+    event_id: str,
+) -> dict:
+    """Delete an event from Google Calendar."""
+
+    try:
+        return delete_calendar_event(
+            event_id=event_id,
+        )
+
+    except Exception as error:
+        return {
+            "success": False,
+            "message": str(error),
+        }
+
+@server.tool()
+def update_google_calendar_event(
+    event_id: str,
+    summary: str = None,
+    start_time: str = None,
+    end_time: str = None,
+    description: str = None,
+    location: str = None,
+) -> dict:
+    """Update an existing Google Calendar event."""
+
+    try:
+        return update_calendar_event(
+            event_id=event_id,
+            summary=summary,
+            start_time=start_time,
+            end_time=end_time,
+            description=description,
+            location=location,
+        )
 
     except Exception as error:
         return {
