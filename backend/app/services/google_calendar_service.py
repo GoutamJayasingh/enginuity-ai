@@ -9,6 +9,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from datetime import datetime
 from googleapiclient.errors import HttpError
+from contextlib import redirect_stdout
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
@@ -20,7 +21,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/calendar.events",
 ]
 
-
+import sys
 
 def get_google_calendar_service():
 
@@ -73,9 +74,10 @@ def get_google_calendar_service():
             SCOPES,
         )
 
-        credentials = flow.run_local_server(
-            port=0
-        )
+        with redirect_stdout(sys.stderr):
+            credentials = flow.run_local_server(
+                port=0,
+            )
 
         token_file.parent.mkdir(
             parents=True,
@@ -106,23 +108,37 @@ def get_upcoming_events(
 
     from datetime import datetime, timezone
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc).isoformat()    
+    
+    events = []
+    page_token = None
 
     try:
-        events_result = service.events().list(
-            calendarId="primary",
-            timeMin=now,
-            maxResults=max_results,
-            singleEvents=True,
-            orderBy="startTime",
-        ).execute()
+        while len(events) < max_results:
+
+            remaining_results = max_results - len(events)
+
+            events_result = service.events().list(
+                calendarId="primary",
+                timeMin=now,
+                maxResults=remaining_results,
+                singleEvents=True,
+                orderBy="startTime",
+                pageToken=page_token,
+            ).execute()
+
+            events.extend(
+                events_result.get("items", [])
+            )
+
+            page_token = events_result.get("nextPageToken")
+
+            if not page_token:
+                break
 
     except HttpError as error:
         return handle_google_calendar_error(error)
-
-    events = events_result.get("items", [])
-
-    
+   
     return {
         "success": True,
         "data": {
